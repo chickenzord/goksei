@@ -6,6 +6,23 @@ import (
 
 type PortfolioType string
 
+func (t PortfolioType) Name() string {
+	switch t {
+	case EquityType:
+		return "equity"
+	case MutualFundType:
+		return "mutual_fund"
+	case CashType:
+		return "cash"
+	case BondType:
+		return "bond"
+	case OtherType:
+		return "other"
+	}
+
+	return "unknown"
+}
+
 var (
 	EquityType     PortfolioType = "EKUITAS"
 	MutualFundType PortfolioType = "REKSADANA"
