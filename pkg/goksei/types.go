@@ -30,6 +30,19 @@ type ShareBalanceResponse struct {
 	Data  []ShareBalance `json:"data"`
 }
 
+func (r *ShareBalanceResponse) RemoveInvalidData() {
+	// ref: https://stackoverflow.com/a/20551116
+	i := 0
+	for _, b := range r.Data {
+		if b.Valid() {
+			r.Data[i] = b
+			i++
+		}
+	}
+
+	r.Data = r.Data[:i]
+}
+
 type ShareBalance struct {
 	Account      string  `json:"rekening"`   // Security account number. Example: "XL001CANE000000"
 	FullName     string  `json:"efek"`       // Name of the asset. Example: "GOTO - GOTO GOJEK TOKOPEDIA Tbk"
@@ -45,6 +58,10 @@ type ShareBalance struct {
 	tipe         string  `json:"tipe"`           // not sure what is it used for
 	rate         string  `json:"rate"`           // not sure what is it used for
 	currentValue float64 `json:"nilaiInvestasi"` // better calculate it client-side from Amount*ClosingPrice
+}
+
+func (c *ShareBalance) Valid() bool {
+	return c.Account != "" && c.FullName != ""
 }
 
 func (c *ShareBalance) CurrentValue() float64 {
@@ -64,4 +81,25 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Validation string `json:"validation"`
+}
+
+type GlobalIdentityResponse struct {
+	Code       string
+	Status     string
+	Identities []GlobalIdentity
+}
+
+type GlobalIdentity struct {
+	LoginID  string `json:"idLogin"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	FullName string `json:"fullName"`
+
+	InvestorID   string `json:"investorId"`
+	InvestorName string `json:"sidName"`
+	CitizenID    string `json:"nikId"`
+	PassportID   string `json:"passportId"`
+	TaxID        string `json:"npwp"`   // Indonesian Tax number (NPWP)
+	CardID       string `json:"cardId"` // KSEI card ID
 }

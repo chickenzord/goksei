@@ -170,7 +170,7 @@ func (c *Client) GetPortfolioSummary() (*PortfolioSummaryResponse, error) {
 
 func (c *Client) GetShareBalances(portfolioType PortfolioType) (*ShareBalanceResponse, error) {
 	if portfolioType == CashType {
-		return nil, fmt.Errorf("this method does not accept cash type")
+		return nil, fmt.Errorf("GetShareBalances does not accept cash type")
 	}
 
 	var response ShareBalanceResponse
@@ -179,5 +179,17 @@ func (c *Client) GetShareBalances(portfolioType PortfolioType) (*ShareBalanceRes
 		return nil, err
 	}
 
+	response.RemoveInvalidData()
+
 	return &response, nil
+}
+
+func (c *Client) GetGlobalIdentity() (*GlobalIdentityResponse, error) {
+	var identity GlobalIdentityResponse
+
+	if err := c.get("/myaccount/global-identity/", &identity); err != nil {
+		return nil, err
+	}
+
+	return &identity, nil
 }
