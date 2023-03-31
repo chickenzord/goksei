@@ -3,15 +3,15 @@ package goksei
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/corpix/uarand"
+	"github.com/philippgille/gokv"
+	"github.com/philippgille/gokv/encoding"
+	"github.com/philippgille/gokv/file"
 )
 
 var (
@@ -20,69 +20,45 @@ var (
 )
 
 type Client struct {
-	baseURL  string
+	baseURL string
+
+	authStore gokv.Store
+
 	username string
 	password string
-
-	authCache   string
-	token       string
-	tokenExpire time.Time
 }
 
-func NewClient(username, password string) *Client {
-	return &Client{
-		baseURL:   defaultBaseURL,
-		authCache: defaultAuthCache,
+type ClientOpts struct {
+	AuthDir  string // directory path to store cached authentication data
+	Username string
+	Password string
+}
 
-		username: username,
-		password: password,
+func NewClient(opts ClientOpts) *Client {
+	client := &Client{
+		baseURL:  defaultBaseURL,
+		username: opts.Username,
+		password: opts.Password,
 	}
-}
 
-func (c *Client) loadToken() error {
-	bytes, err := ioutil.ReadFile(c.authCache)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
+	if opts.AuthDir != "" {
+		fileStore, err := file.NewStore(file.Options{
+			Directory: defaultAuthCache,
+			Codec:     encoding.JSON,
+		})
+		if err != nil {
+			panic(err)
 		}
 
-		return err
+		client.authStore = fileStore
 	}
 
-	c.token = string(bytes)
-
-	expire, err := getExpireTime(c.token)
-	if err != nil {
-		return err
-	}
-
-	c.tokenExpire = *expire
-
-	return nil
+	return client
 }
 
-func (c *Client) saveToken(token string, expire time.Time) error {
-	c.token = token
-	c.tokenExpire = expire
-
-	if err := ioutil.WriteFile(c.authCache, []byte(token), 0700); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Client) login() error {
-	if err := c.loadToken(); err != nil {
-		return err
-	}
-
-	if c.token != "" && c.tokenExpire.After(time.Now()) {
-		return nil
-	}
-
+func (c *Client) login() (string, error) {
 	if c.username == "" || c.password == "" {
-		return fmt.Errorf("username and password are required")
+		return "", fmt.Errorf("username and password are required")
 	}
 
 	body, err := json.Marshal(LoginRequest{
@@ -92,12 +68,12 @@ func (c *Client) login() error {
 		AppType:  "web",
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/login?lang=id", bytes.NewBuffer(body))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req.Header.Set("Referer", "https://akses.ksei.co.id")
@@ -106,29 +82,57 @@ func (c *Client) login() error {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var loginResponse LoginResponse
 
 	if err := json.NewDecoder(res.Body).Decode(&loginResponse); err != nil {
-		return err
+		return "", err
 	}
 
-	expire, err := getExpireTime(loginResponse.Validation)
+	token := loginResponse.Validation
+
+	if c.authStore != nil {
+		if err := c.authStore.Set(c.username, token); err != nil {
+			return "", err
+		}
+	}
+
+	return token, nil
+}
+
+func (c *Client) getToken() (string, error) {
+	if c.authStore == nil {
+		return c.login()
+	}
+
+	var token string
+
+	found, err := c.authStore.Get(c.username, &token)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if c.saveToken(loginResponse.Validation, *expire); err != nil {
-		return nil
+	if !found || token == "" {
+		return c.login()
 	}
 
-	return nil
+	expire, err := getExpireTime(token)
+	if err != nil {
+		return "", err
+	}
+
+	if expire.Before(time.Now()) {
+		return c.login()
+	}
+
+	return token, nil
 }
 
 func (c *Client) get(path string, dst interface{}) error {
-	if err := c.login(); err != nil {
+	token, err := c.getToken()
+	if err != nil {
 		return err
 	}
 
@@ -139,7 +143,7 @@ func (c *Client) get(path string, dst interface{}) error {
 
 	req.Header.Set("Referer", "https://akses.ksei.co.id")
 	req.Header.Set("User-Agent", uarand.GetRandom())
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

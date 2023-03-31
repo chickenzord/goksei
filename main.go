@@ -31,7 +31,11 @@ func main() {
 		{Number: 5, Align: text.AlignRight},
 	})
 
-	client := goksei.NewClient(username, password)
+	client := goksei.NewClient(goksei.ClientOpts{
+		Username: username,
+		Password: password,
+		AuthDir:  ".goksei-auth",
+	})
 
 	equityBalance, err := client.GetShareBalances(goksei.EquityType)
 	if err != nil {
