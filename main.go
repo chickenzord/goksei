@@ -31,10 +31,15 @@ func main() {
 		{Number: 5, Align: text.AlignRight},
 	})
 
+	authStore, err := goksei.NewFileAuthStore(".goksei-auth")
+	if err != nil {
+		panic(err)
+	}
+
 	client := goksei.NewClient(goksei.ClientOpts{
-		Username: username,
-		Password: password,
-		AuthDir:  ".goksei-auth",
+		Username:  username,
+		Password:  password,
+		AuthStore: authStore,
 	})
 
 	equityBalance, err := client.GetShareBalances(goksei.EquityType)

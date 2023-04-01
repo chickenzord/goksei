@@ -9,9 +9,6 @@ import (
 	"time"
 
 	"github.com/corpix/uarand"
-	"github.com/philippgille/gokv"
-	"github.com/philippgille/gokv/encoding"
-	"github.com/philippgille/gokv/file"
 )
 
 var (
@@ -22,35 +19,24 @@ var (
 type Client struct {
 	baseURL string
 
-	authStore gokv.Store
+	authStore AuthStore
 
 	username string
 	password string
 }
 
 type ClientOpts struct {
-	AuthDir  string // directory path to store cached authentication data
-	Username string
-	Password string
+	AuthStore AuthStore // directory path to store cached authentication data
+	Username  string
+	Password  string
 }
 
 func NewClient(opts ClientOpts) *Client {
 	client := &Client{
-		baseURL:  defaultBaseURL,
-		username: opts.Username,
-		password: opts.Password,
-	}
-
-	if opts.AuthDir != "" {
-		fileStore, err := file.NewStore(file.Options{
-			Directory: defaultAuthCache,
-			Codec:     encoding.JSON,
-		})
-		if err != nil {
-			panic(err)
-		}
-
-		client.authStore = fileStore
+		baseURL:   defaultBaseURL,
+		authStore: opts.AuthStore,
+		username:  opts.Username,
+		password:  opts.Password,
 	}
 
 	return client
