@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/chickenzord/goksei/pkg/goksei"
+	"github.com/chickenzord/goksei"
 	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
