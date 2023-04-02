@@ -89,6 +89,10 @@ func (c *ShareBalance) Symbol() string {
 	return strings.Split(c.FullName, " - ")[0]
 }
 
+func (c *ShareBalance) Name() string {
+	return strings.Split(c.FullName, " - ")[1]
+}
+
 type LoginRequest struct {
 	ID       string `json:"id"`
 	AppType  string `json:"appType"`
