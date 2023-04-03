@@ -50,6 +50,7 @@ type ShareBalanceResponse struct {
 func (r *ShareBalanceResponse) RemoveInvalidData() {
 	// ref: https://stackoverflow.com/a/20551116
 	i := 0
+
 	for _, b := range r.Data {
 		if b.Valid() {
 			r.Data[i] = b
@@ -71,10 +72,10 @@ type ShareBalance struct {
 
 	// hidden unknown/unused fields
 
-	id           int     `json:"id"`             // not sure what is it used for
-	tipe         string  `json:"tipe"`           // not sure what is it used for
-	rate         string  `json:"rate"`           // not sure what is it used for
-	currentValue float64 `json:"nilaiInvestasi"` // better calculate it client-side from Amount*ClosingPrice
+	id           int     `json:"id"`             //nolint // not sure what is it used for
+	tipe         string  `json:"tipe"`           //nolint // not sure what is it used for
+	rate         string  `json:"rate"`           //nolint // not sure what is it used for
+	currentValue float64 `json:"nilaiInvestasi"` //nolint // better calculate it client-side from Amount*ClosingPrice
 }
 
 func (c *ShareBalance) Valid() bool {

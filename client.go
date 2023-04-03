@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	defaultBaseURL   = "https://akses.ksei.co.id/service"
-	defaultAuthCache = ".goksei-auth"
+	defaultBaseURL = "https://akses.ksei.co.id/service"
 )
 
 type Client struct {
@@ -137,7 +136,7 @@ func (c *Client) get(path string, dst interface{}) error {
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(dst); err != nil {
-		return err
+		return fmt.Errorf("error decoding body: %w", err)
 	}
 
 	return nil
