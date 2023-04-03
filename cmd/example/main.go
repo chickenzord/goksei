@@ -21,14 +21,15 @@ func main() {
 	t.AppendHeader(table.Row{
 		"Account",
 		"Symbol",
+		"Name",
 		"Amount",
 		"Closing Price",
 		"Current Value",
 	})
 	t.SetColumnConfigs([]table.ColumnConfig{
-		{Number: 3, Align: text.AlignRight},
 		{Number: 4, Align: text.AlignRight},
 		{Number: 5, Align: text.AlignRight},
+		{Number: 6, Align: text.AlignRight},
 	})
 
 	authStore, err := goksei.NewFileAuthStore(".goksei-auth")
@@ -51,6 +52,7 @@ func main() {
 		t.AppendRow([]interface{}{
 			sb.Account,
 			sb.Symbol(),
+			sb.Name(),
 			sb.Amount,
 			humanize.FormatFloat("#,###.##", sb.ClosingPrice),
 			humanize.FormatFloat("#,###.##", sb.CurrentValue()),
@@ -66,6 +68,7 @@ func main() {
 		t.AppendRow([]interface{}{
 			sb.Account,
 			sb.Symbol(),
+			sb.Name(),
 			sb.Amount,
 			humanize.FormatFloat("#,###.##", sb.ClosingPrice),
 			humanize.FormatFloat("#,###.##", sb.CurrentValue()),
