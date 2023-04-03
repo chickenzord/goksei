@@ -1,0 +1,17 @@
+linters:
+  disable-all: true
+  enable:
+    # defaults
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    # addons
+    - gocyclo
+    - revive
+    - whitespace
+    - wsl
+    # - funlen
