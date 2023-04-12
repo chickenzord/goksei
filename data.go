@@ -52,3 +52,56 @@ func MutualFundByCode(code string) (mutualFund *MutualFund, ok bool) {
 
 	return &m, true
 }
+
+type CustodianBank struct {
+	ID   string
+	Name string
+}
+
+var (
+	custodianBanks map[string]CustodianBank
+
+	staticCustodianBanks = map[string]CustodianBank{
+		"JAGO1": {
+			ID: "JAGO1", Name: "PT Bank Jago Tbk",
+		},
+	}
+)
+
+func initializeCustodianBanks() {
+	f, err := embedFS.Open("data/custodian_banks.csv")
+	if err != nil {
+		panic(err)
+	}
+
+	rows, err := csv.NewReader(f).ReadAll()
+	if err != nil {
+		panic(err)
+	}
+
+	custodianBanks = make(map[string]CustodianBank)
+
+	for id, bank := range staticCustodianBanks {
+		custodianBanks[id] = bank
+	}
+
+	for _, row := range rows[1:] {
+		custodianBanks[row[1]] = CustodianBank{
+			ID:   row[1],
+			Name: row[2],
+		}
+	}
+}
+
+func CustodianBankByID(id string) (custodianBank *CustodianBank, ok bool) {
+	if len(custodianBanks) == 0 {
+		initializeCustodianBanks()
+	}
+
+	m, ok := custodianBanks[id]
+	if !ok {
+		return nil, false
+	}
+
+	return &m, true
+}
