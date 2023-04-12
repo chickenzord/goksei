@@ -3,6 +3,7 @@ package goksei
 import (
 	"embed"
 	"encoding/csv"
+	"regexp"
 )
 
 //go:embed data
@@ -53,18 +54,13 @@ func MutualFundByCode(code string) (mutualFund *MutualFund, ok bool) {
 	return &m, true
 }
 
-type CustodianBank struct {
-	ID   string
-	Name string
-}
-
 var (
-	custodianBanks map[string]CustodianBank
+	numberSuffix = regexp.MustCompile(`[0-9]+$`)
 
-	staticCustodianBanks = map[string]CustodianBank{
-		"JAGO1": {
-			ID: "JAGO1", Name: "PT Bank Jago Tbk",
-		},
+	custodianBankNames map[string]string
+
+	staticCustodianBankNames = map[string]string{
+		"JAGO": "PT Bank Jago Tbk",
 	}
 )
 
@@ -79,29 +75,30 @@ func initializeCustodianBanks() {
 		panic(err)
 	}
 
-	custodianBanks = make(map[string]CustodianBank)
+	custodianBankNames = make(map[string]string)
 
-	for id, bank := range staticCustodianBanks {
-		custodianBanks[id] = bank
+	for id, name := range staticCustodianBankNames {
+		custodianBankNames[stripNumberSuffix(id)] = name
 	}
 
 	for _, row := range rows[1:] {
-		custodianBanks[row[1]] = CustodianBank{
-			ID:   row[1],
-			Name: row[2],
-		}
+		custodianBankNames[stripNumberSuffix(row[1])] = row[2]
 	}
 }
 
-func CustodianBankByID(id string) (custodianBank *CustodianBank, ok bool) {
-	if len(custodianBanks) == 0 {
+func CustodianBankNameByID(id string) (name string, ok bool) {
+	if len(custodianBankNames) == 0 {
 		initializeCustodianBanks()
 	}
 
-	m, ok := custodianBanks[id]
+	m, ok := custodianBankNames[stripNumberSuffix(id)]
 	if !ok {
-		return nil, false
+		return "", false
 	}
 
-	return &m, true
+	return m, true
+}
+
+func stripNumberSuffix(s string) string {
+	return numberSuffix.ReplaceAllString(s, "")
 }
