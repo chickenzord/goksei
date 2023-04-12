@@ -115,7 +115,7 @@ func (c *Client) getToken() (string, error) {
 	return token, nil
 }
 
-func (c *Client) get(path string, dst interface{}) error {
+func (c *Client) Get(path string, dst interface{}) error {
 	token, err := c.getToken()
 	if err != nil {
 		return err
@@ -150,7 +150,17 @@ func (c *Client) SetAuth(username, password string) {
 func (c *Client) GetPortfolioSummary() (*PortfolioSummaryResponse, error) {
 	var response PortfolioSummaryResponse
 
-	if err := c.get("/myportofolio/summary", &response); err != nil {
+	if err := c.Get("/myportofolio/summary", &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *Client) GetCashBalances() (*CashBalanceResponse, error) {
+	var response CashBalanceResponse
+
+	if err := c.Get("/myportofolio/summary-detail/"+strings.ToLower(string(CashType)), &response); err != nil {
 		return nil, err
 	}
 
@@ -164,7 +174,7 @@ func (c *Client) GetShareBalances(portfolioType PortfolioType) (*ShareBalanceRes
 
 	var response ShareBalanceResponse
 
-	if err := c.get("/myportofolio/summary-detail/"+strings.ToLower(string(portfolioType)), &response); err != nil {
+	if err := c.Get("/myportofolio/summary-detail/"+strings.ToLower(string(portfolioType)), &response); err != nil {
 		return nil, err
 	}
 
@@ -176,7 +186,7 @@ func (c *Client) GetShareBalances(portfolioType PortfolioType) (*ShareBalanceRes
 func (c *Client) GetGlobalIdentity() (*GlobalIdentityResponse, error) {
 	var identity GlobalIdentityResponse
 
-	if err := c.get("/myaccount/global-identity/", &identity); err != nil {
+	if err := c.Get("/myaccount/global-identity/", &identity); err != nil {
 		return nil, err
 	}
 

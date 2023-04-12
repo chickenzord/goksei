@@ -15,7 +15,7 @@ Unstable proof of concept
 - [x] Cache token on disk with auto relogin when expired
 - [x] Get balance overview
 - [x] Get balance for Equities, Mutual Funds, Bonds, and "Others"
-- [ ] Get cash balance
+- [x] Get cash balance
 - [ ] Command-line interface
 
 ## Using as library

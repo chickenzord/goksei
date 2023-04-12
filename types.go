@@ -1,6 +1,7 @@
 package goksei
 
 import (
+	"math"
 	"strings"
 )
 
@@ -40,6 +41,24 @@ type PortfolioSummaryDetails struct {
 	Type    string  `json:"type"`
 	Amount  float64 `json:"summaryAmount"`
 	Percent float64 `json:"percent"`
+}
+
+type CashBalance struct {
+	ID            int     `json:"id"`
+	AccountNumber string  `json:"rekening"`
+	BankID        string  `json:"bank"`
+	Currency      string  `json:"currCode"`
+	Balance       float64 `json:"saldo"`
+	BalanceIDR    float64 `json:"saldoIdr"`
+	Status        int     `json:"status"`
+}
+
+func (c *CashBalance) CurrentBalance() float64 {
+	return math.Max(c.Balance, c.BalanceIDR)
+}
+
+type CashBalanceResponse struct {
+	Data []CashBalance `json:"data"`
 }
 
 type ShareBalanceResponse struct {
