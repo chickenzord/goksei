@@ -6,7 +6,7 @@ require (
 	github.com/corpix/uarand v0.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/jedib0t/go-pretty/v6 v6.4.4
+	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/joho/godotenv v1.5.1
 	github.com/philippgille/gokv v0.6.0
 	github.com/philippgille/gokv/encoding v0.6.0
