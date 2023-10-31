@@ -9,7 +9,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.4.4
 	github.com/joho/godotenv v1.5.1
 	github.com/philippgille/gokv v0.6.0
-	github.com/philippgille/gokv/encoding v0.0.0-20191011213304-eb77f15b9c61
+	github.com/philippgille/gokv/encoding v0.6.0
 	github.com/philippgille/gokv/file v0.6.0
 )
 
