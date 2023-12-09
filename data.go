@@ -112,8 +112,8 @@ func initializeCustodianBanks() {
 }
 
 func CustodianBanks() []CustodianBank {
-	if len(mutualFunds) == 0 {
-		initializeMutualFunds()
+	if len(custodianBanks) == 0 {
+		initializeCustodianBanks()
 	}
 
 	result := []CustodianBank{}
