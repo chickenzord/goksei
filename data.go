@@ -125,17 +125,37 @@ func CustodianBanks() []CustodianBank {
 	return result
 }
 
-func CustodianBankNameByID(id string) (name string, ok bool) {
+func CustodianBankByCode(code string) (custodianBank *CustodianBank, ok bool) {
 	if len(custodianBanks) == 0 {
 		initializeCustodianBanks()
 	}
 
-	bank, ok := custodianBanks[stripNumberSuffix(id)]
+	bank, ok := custodianBanks[stripNumberSuffix(code)]
+	if !ok {
+		return nil, false
+	}
+
+	return &bank, true
+}
+
+func CustodianBankNameByCode(code string) (name string, ok bool) {
+	if len(custodianBanks) == 0 {
+		initializeCustodianBanks()
+	}
+
+	bank, ok := custodianBanks[stripNumberSuffix(code)]
 	if !ok {
 		return "", false
 	}
 
 	return bank.Name, true
+}
+
+// CustodianBankNameByID returns bank name by ID
+//
+// Deprecated: use CustodianBankNameByCode instead
+func CustodianBankNameByID(id string) (name string, ok bool) {
+	return CustodianBankNameByCode(id)
 }
 
 func stripNumberSuffix(s string) string {
