@@ -54,13 +54,35 @@ func MutualFundByCode(code string) (mutualFund *MutualFund, ok bool) {
 	return &m, true
 }
 
+func MutualFunds() []MutualFund {
+	if len(mutualFunds) == 0 {
+		initializeMutualFunds()
+	}
+
+	result := []MutualFund{}
+
+	for _, f := range mutualFunds {
+		result = append(result, f)
+	}
+
+	return result
+}
+
+type CustodianBank struct {
+	Code string
+	Name string
+}
+
 var (
 	numberSuffix = regexp.MustCompile(`[0-9]+$`)
 
-	custodianBankNames map[string]string
+	custodianBanks map[string]CustodianBank
 
-	staticCustodianBankNames = map[string]string{
-		"JAGO": "PT Bank Jago Tbk",
+	staticCustodianBanks = []CustodianBank{
+		{
+			Code: "JAGO",
+			Name: "PT Bank Jago Tbk",
+		},
 	}
 )
 
@@ -75,28 +97,45 @@ func initializeCustodianBanks() {
 		panic(err)
 	}
 
-	custodianBankNames = make(map[string]string)
+	custodianBanks = make(map[string]CustodianBank)
 
-	for id, name := range staticCustodianBankNames {
-		custodianBankNames[stripNumberSuffix(id)] = name
+	for _, bank := range staticCustodianBanks {
+		custodianBanks[bank.Code] = bank
 	}
 
 	for _, row := range rows[1:] {
-		custodianBankNames[stripNumberSuffix(row[1])] = row[2]
+		custodianBanks[stripNumberSuffix(row[1])] = CustodianBank{
+			Code: row[1],
+			Name: row[2],
+		}
 	}
 }
 
+func CustodianBanks() []CustodianBank {
+	if len(mutualFunds) == 0 {
+		initializeMutualFunds()
+	}
+
+	result := []CustodianBank{}
+
+	for _, bank := range custodianBanks {
+		result = append(result, bank)
+	}
+
+	return result
+}
+
 func CustodianBankNameByID(id string) (name string, ok bool) {
-	if len(custodianBankNames) == 0 {
+	if len(custodianBanks) == 0 {
 		initializeCustodianBanks()
 	}
 
-	m, ok := custodianBankNames[stripNumberSuffix(id)]
+	bank, ok := custodianBanks[stripNumberSuffix(id)]
 	if !ok {
 		return "", false
 	}
 
-	return m, true
+	return bank.Name, true
 }
 
 func stripNumberSuffix(s string) string {
