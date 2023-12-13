@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/csv"
 	"regexp"
+	"sort"
 )
 
 //go:embed data
@@ -65,6 +66,10 @@ func MutualFunds() []MutualFund {
 		result = append(result, f)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Code < result[j].Code
+	})
+
 	return result
 }
 
@@ -121,6 +126,10 @@ func CustodianBanks() []CustodianBank {
 	for _, bank := range custodianBanks {
 		result = append(result, bank)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Code < result[j].Code
+	})
 
 	return result
 }
