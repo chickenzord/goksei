@@ -40,6 +40,7 @@ func TestMutualFundByCode(t *testing.T) {
 			if !reflect.DeepEqual(gotMutualFund, tt.wantMutualFund) {
 				t.Errorf("MutualFundByCode() gotMutualFund = %v, want %v", gotMutualFund, tt.wantMutualFund)
 			}
+
 			if gotOk != tt.wantOk {
 				t.Errorf("MutualFundByCode() gotOk = %v, want %v", gotOk, tt.wantOk)
 			}
@@ -106,6 +107,7 @@ func TestCustodianBankByID(t *testing.T) {
 			if !reflect.DeepEqual(gotCustodianBank, tt.wantCustodianBank) {
 				t.Errorf("CustodianBankByID() gotCustodianBank = %v, want %v", gotCustodianBank, tt.wantCustodianBank)
 			}
+
 			if gotOk != tt.wantOk {
 				t.Errorf("CustodianBankByID() gotOk = %v, want %v", gotOk, tt.wantOk)
 			}
