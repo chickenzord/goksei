@@ -11,3 +11,5 @@ updates:
       interval: "weekly"
     reviewers:
       - akhy
+    commit-message:
+      prefix: chore(deps)
