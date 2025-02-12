@@ -37,10 +37,11 @@ type ClientOpts struct {
 
 func NewClient(opts ClientOpts) *Client {
 	client := &Client{
-		baseURL:   defaultBaseURL,
-		authStore: opts.AuthStore,
-		username:  opts.Username,
-		password:  opts.Password,
+		baseURL:       defaultBaseURL,
+		authStore:     opts.AuthStore,
+		username:      opts.Username,
+		password:      opts.Password,
+		plainPassword: opts.PlainPassword,
 	}
 
 	return client
@@ -71,17 +72,13 @@ func (c *Client) hashPassword() (string, error) {
 		return "", fmt.Errorf("error getting hashed password: %w", err)
 	}
 
-	type ActivationResponseData struct {
-		Pass string `json:"pass"`
+	var activationResponse struct {
+		Code   string `json:"code"`   // e.g. "200"
+		Status string `json:"status"` // e.g. "success"
+		Data   []struct {
+			Pass string `json:"pass"`
+		} `json:"data"`
 	}
-
-	type ActivationResponse struct {
-		Code   string                   `json:"code"`   // e.g. "200"
-		Status string                   `json:"status"` // e.g. "success"
-		Data   []ActivationResponseData `json:"data"`
-	}
-
-	var activationResponse ActivationResponse
 
 	if err := json.NewDecoder(res.Body).Decode(&activationResponse); err != nil {
 		return "", fmt.Errorf("error decoding activation response body: %w", err)
