@@ -15,6 +15,7 @@ func main() {
 
 	username := os.Getenv("GOKSEI_USERNAME")
 	password := os.Getenv("GOKSEI_PASSWORD")
+	plainPassword := os.Getenv("GOKSEI_PLAIN_PASSWORD") == "true"
 
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
@@ -38,9 +39,10 @@ func main() {
 	}
 
 	client := goksei.NewClient(goksei.ClientOpts{
-		Username:  username,
-		Password:  password,
-		AuthStore: authStore,
+		Username:      username,
+		Password:      password,
+		PlainPassword: plainPassword,
+		AuthStore:     authStore,
 	})
 
 	equityBalance, err := client.GetShareBalances(goksei.EquityType)
