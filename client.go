@@ -2,9 +2,12 @@ package goksei
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -12,33 +15,80 @@ import (
 )
 
 var (
-	defaultBaseURL = "https://akses.ksei.co.id/service"
+	defaultBaseReferer = "https://akses.ksei.co.id"
+	defaultBaseURL     = "https://akses.ksei.co.id/service"
 )
 
 type Client struct {
 	baseURL string
 
-	authStore AuthStore
-
-	username string
-	password string
+	authStore     AuthStore
+	username      string
+	password      string
+	plainPassword bool
 }
 
 type ClientOpts struct {
-	AuthStore AuthStore // directory path to store cached authentication data
-	Username  string
-	Password  string
+	AuthStore     AuthStore // directory path to store cached authentication data
+	Username      string
+	Password      string
+	PlainPassword bool
 }
 
 func NewClient(opts ClientOpts) *Client {
 	client := &Client{
-		baseURL:   defaultBaseURL,
-		authStore: opts.AuthStore,
-		username:  opts.Username,
-		password:  opts.Password,
+		baseURL:       defaultBaseURL,
+		authStore:     opts.AuthStore,
+		username:      opts.Username,
+		password:      opts.Password,
+		plainPassword: opts.PlainPassword,
 	}
 
 	return client
+}
+
+func (c *Client) hashPassword() (string, error) {
+	if c.plainPassword {
+		return c.password, nil
+	}
+
+	passwordSHA1 := fmt.Sprintf("%x", sha1.Sum([]byte(c.password)))
+	timestamp := time.Now().Unix()
+	param := fmt.Sprintf("%s@@!!@@%d", passwordSHA1, timestamp)
+	encodedParam := base64.StdEncoding.EncodeToString([]byte(param))
+
+	url := fmt.Sprintf("%s/activation/generated?param=%s", c.baseURL, url.QueryEscape(encodedParam))
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("error creating hashed password request: %w", err)
+	}
+
+	req.Header.Set("Referer", defaultBaseReferer)
+	req.Header.Set("User-Agent", uarand.GetRandom())
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("error getting hashed password: %w", err)
+	}
+
+	var activationResponse struct {
+		Code   string `json:"code"`   // e.g. "200"
+		Status string `json:"status"` // e.g. "success"
+		Data   []struct {
+			Pass string `json:"pass"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&activationResponse); err != nil {
+		return "", fmt.Errorf("error decoding activation response body: %w", err)
+	}
+
+	if len(activationResponse.Data) == 0 {
+		return "", fmt.Errorf("no data found in activation response: %v", activationResponse)
+	}
+
+	return activationResponse.Data[0].Pass, nil
 }
 
 func (c *Client) login() (string, error) {
@@ -46,9 +96,14 @@ func (c *Client) login() (string, error) {
 		return "", fmt.Errorf("username and password are required")
 	}
 
+	hashedPassword, err := c.hashPassword()
+	if err != nil {
+		return "", err
+	}
+
 	body, err := json.Marshal(LoginRequest{
 		Username: c.username,
-		Password: c.password,
+		Password: hashedPassword,
 		ID:       "1",
 		AppType:  "web",
 	})
@@ -61,7 +116,7 @@ func (c *Client) login() (string, error) {
 		return "", err
 	}
 
-	req.Header.Set("Referer", "https://akses.ksei.co.id")
+	req.Header.Set("Referer", defaultBaseReferer)
 	req.Header.Set("User-Agent", uarand.GetRandom())
 	req.Header.Set("Content-Type", "application/json")
 
@@ -145,6 +200,14 @@ func (c *Client) Get(path string, dst interface{}) error {
 func (c *Client) SetAuth(username, password string) {
 	c.username = username
 	c.password = password
+}
+
+func (c *Client) SetBaseURL(baseURL string) {
+	c.baseURL = baseURL
+}
+
+func (c *Client) SetPlainPassword(plainPassword bool) {
+	c.plainPassword = plainPassword
 }
 
 func (c *Client) GetPortfolioSummary() (*PortfolioSummaryResponse, error) {

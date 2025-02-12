@@ -30,17 +30,31 @@ Example usages:
 
 ```go
 
-import "github.com/chickenzord/goksei/pkg/goksei"
+import "github.com/chickenzord/goksei"
 
 func main() {
-    client := goksei.NewClient("username", "saltedpassword")
+	username := "myemail@domain.com"
+	password := "myinsecurepassword"
+	plainPassword := true
 
-    equityBalance, err := client.GetShareBalances(goksei.EquityType)
-    if err != nil {
-        panic(err)
-    }
+	authStore, err := goksei.NewFileAuthStore(".goksei-auth")
+	if err != nil {
+		panic(err)
+	}
 
-    // ...
+	client := goksei.NewClient(goksei.ClientOpts{
+		Username:      username,
+		Password:      password,
+		PlainPassword: plainPassword,
+		AuthStore:     authStore,
+	})
+
+	equityBalance, err := client.GetShareBalances(goksei.EquityType)
+	if err != nil {
+		panic(err)
+	}
+
+	// ...
 }
 
 ```
@@ -56,8 +70,19 @@ GOKSEI_PASSWORD=yoursaltedpassword
 
 The salted password can be obtained by logging in with your account on https://akses.ksei.co.id/login and inspect the request payload sent by JS code.
 
+(New feature) Alternatively, you can also supply your plaintext password in `GOKSEI_PASSWORD` then set `GOKSEI_PLAIN_PASSWORD` to `true`. Goksei will automate the hashing process for every login attempts.
+
 ```sh
-go run ./cmd/example
+GOKSEI_USERNAME=youremail@domain.com
+GOKSEI_PASSWORD=yourplainpassword
+GOKSEI_PLAIN_PASSWORD=true
+```
+
+Then you can run the example using this command:
+
+```sh
+cd ./cmd/example
+go run .
 ```
 
 ## Disclaimer
