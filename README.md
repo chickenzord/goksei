@@ -45,7 +45,7 @@ func main() {
 
 ```
 
-## Using as CLI
+## Trying out the example
 
 Create `.env` file with following content:
 
@@ -56,10 +56,8 @@ GOKSEI_PASSWORD=yoursaltedpassword
 
 The salted password can be obtained by logging in with your account on https://akses.ksei.co.id/login and inspect the request payload sent by JS code.
 
-Currently the CLI only serve as feature showcase. Run it with...
-
 ```sh
-go run .
+go run ./cmd/example
 ```
 
 ## Disclaimer
