@@ -202,6 +202,14 @@ func (c *Client) SetAuth(username, password string) {
 	c.password = password
 }
 
+func (c *Client) SetBaseURL(baseURL string) {
+	c.baseURL = baseURL
+}
+
+func (c *Client) SetPlainPassword(plainPassword bool) {
+	c.plainPassword = plainPassword
+}
+
 func (c *Client) GetPortfolioSummary() (*PortfolioSummaryResponse, error) {
 	var response PortfolioSummaryResponse
 
