@@ -48,7 +48,7 @@ func NewClient(opts ClientOpts) *Client {
 }
 
 func (c *Client) hashPassword() (string, error) {
-	if c.plainPassword {
+	if !c.plainPassword {
 		return c.password, nil
 	}
 
