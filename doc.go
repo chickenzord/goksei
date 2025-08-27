@@ -22,6 +22,7 @@
 //		Password:      "your-password",
 //		PlainPassword: true,
 //		AuthStore:     authStore,
+//		Timeout:       30 * time.Second, // optional: default is 30s
 //	})
 //
 //	summary, err := client.GetPortfolioSummary()

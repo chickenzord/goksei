@@ -17,6 +17,7 @@ import (
 var (
 	defaultBaseReferer = "https://akses.ksei.co.id"
 	defaultBaseURL     = "https://akses.ksei.co.id/service"
+	defaultTimeout     = 30 * time.Second
 )
 
 // Client provides access to the KSEI (Indonesian Central Securities Depository) API.
@@ -24,6 +25,7 @@ var (
 // portfolio information including cash balances, share holdings, and account details.
 type Client struct {
 	baseURL string
+	timeout time.Duration
 
 	authStore     AuthStore
 	username      string
@@ -33,17 +35,24 @@ type Client struct {
 
 // ClientOpts contains configuration options for creating a new Client.
 type ClientOpts struct {
-	AuthStore     AuthStore // directory path to store cached authentication data
+	AuthStore     AuthStore     // directory path to store cached authentication data
 	Username      string
 	Password      string
 	PlainPassword bool
+	Timeout       time.Duration // HTTP request timeout (default: 30s)
 }
 
 // NewClient creates a new KSEI API client with the provided options.
 // The client will use the provided AuthStore for token caching and automatic re-authentication.
 func NewClient(opts ClientOpts) *Client {
+	timeout := opts.Timeout
+	if timeout == 0 {
+		timeout = defaultTimeout
+	}
+
 	client := &Client{
 		baseURL:       defaultBaseURL,
+		timeout:       timeout,
 		authStore:     opts.AuthStore,
 		username:      opts.Username,
 		password:      opts.Password,
@@ -73,7 +82,8 @@ func (c *Client) hashPassword() (string, error) {
 	req.Header.Set("Referer", defaultBaseReferer)
 	req.Header.Set("User-Agent", uarand.GetRandom())
 
-	res, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: c.timeout}
+	res, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error getting hashed password: %w", err)
 	}
@@ -126,7 +136,8 @@ func (c *Client) login() (string, error) {
 	req.Header.Set("User-Agent", uarand.GetRandom())
 	req.Header.Set("Content-Type", "application/json")
 
-	res, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: c.timeout}
+	res, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -193,7 +204,8 @@ func (c *Client) Get(path string, dst interface{}) error {
 	req.Header.Set("User-Agent", uarand.GetRandom())
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	res, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: c.timeout}
+	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -223,6 +235,12 @@ func (c *Client) SetBaseURL(baseURL string) {
 // When false, the password is expected to be pre-hashed.
 func (c *Client) SetPlainPassword(plainPassword bool) {
 	c.plainPassword = plainPassword
+}
+
+// SetTimeout configures the HTTP request timeout for all API calls.
+// A timeout of 0 means no timeout. The default timeout is 30 seconds.
+func (c *Client) SetTimeout(timeout time.Duration) {
+	c.timeout = timeout
 }
 
 // GetPortfolioSummary retrieves a summary of all portfolio holdings including
