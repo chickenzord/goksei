@@ -35,6 +35,8 @@ func initializeMutualFunds() {
 	}
 }
 
+// MutualFund contains information about a mutual fund product
+// including its code, name, type, and investment manager.
 type MutualFund struct {
 	Code              string
 	ProductName       string
@@ -42,6 +44,8 @@ type MutualFund struct {
 	InvestmentManager string
 }
 
+// MutualFundByCode looks up a mutual fund by its code.
+// Returns the mutual fund information and true if found, nil and false otherwise.
 func MutualFundByCode(code string) (mutualFund *MutualFund, ok bool) {
 	if len(mutualFunds) == 0 {
 		initializeMutualFunds()
@@ -55,6 +59,8 @@ func MutualFundByCode(code string) (mutualFund *MutualFund, ok bool) {
 	return &m, true
 }
 
+// MutualFunds returns all mutual fund data sorted by code.
+// The data is loaded from embedded CSV files containing OJK and KSEI mutual fund information.
 func MutualFunds() []MutualFund {
 	if len(mutualFunds) == 0 {
 		initializeMutualFunds()
@@ -73,6 +79,8 @@ func MutualFunds() []MutualFund {
 	return result
 }
 
+// CustodianBank contains information about a custodian bank
+// including its code and full name.
 type CustodianBank struct {
 	Code string
 	Name string
@@ -116,6 +124,8 @@ func initializeCustodianBanks() {
 	}
 }
 
+// CustodianBanks returns all custodian bank data sorted by code.
+// The data is loaded from embedded CSV files from the KSEI website.
 func CustodianBanks() []CustodianBank {
 	if len(custodianBanks) == 0 {
 		initializeCustodianBanks()
@@ -134,6 +144,9 @@ func CustodianBanks() []CustodianBank {
 	return result
 }
 
+// CustodianBankByCode looks up a custodian bank by its code.
+// The function strips numeric suffixes from codes for matching.
+// Returns the bank information and true if found, nil and false otherwise.
 func CustodianBankByCode(code string) (custodianBank *CustodianBank, ok bool) {
 	if len(custodianBanks) == 0 {
 		initializeCustodianBanks()
@@ -147,6 +160,9 @@ func CustodianBankByCode(code string) (custodianBank *CustodianBank, ok bool) {
 	return &bank, true
 }
 
+// CustodianBankNameByCode looks up a custodian bank name by its code.
+// The function strips numeric suffixes from codes for matching.
+// Returns the bank name and true if found, empty string and false otherwise.
 func CustodianBankNameByCode(code string) (name string, ok bool) {
 	if len(custodianBanks) == 0 {
 		initializeCustodianBanks()

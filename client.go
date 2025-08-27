@@ -19,6 +19,9 @@ var (
 	defaultBaseURL     = "https://akses.ksei.co.id/service"
 )
 
+// Client provides access to the KSEI (Indonesian Central Securities Depository) API.
+// It handles authentication, token management, and provides methods to retrieve
+// portfolio information including cash balances, share holdings, and account details.
 type Client struct {
 	baseURL string
 
@@ -28,6 +31,7 @@ type Client struct {
 	plainPassword bool
 }
 
+// ClientOpts contains configuration options for creating a new Client.
 type ClientOpts struct {
 	AuthStore     AuthStore // directory path to store cached authentication data
 	Username      string
@@ -35,6 +39,8 @@ type ClientOpts struct {
 	PlainPassword bool
 }
 
+// NewClient creates a new KSEI API client with the provided options.
+// The client will use the provided AuthStore for token caching and automatic re-authentication.
 func NewClient(opts ClientOpts) *Client {
 	client := &Client{
 		baseURL:       defaultBaseURL,
@@ -170,6 +176,8 @@ func (c *Client) getToken() (string, error) {
 	return token, nil
 }
 
+// Get performs an authenticated GET request to the specified API path and decodes
+// the JSON response into dst. It automatically handles authentication and token refresh.
 func (c *Client) Get(path string, dst interface{}) error {
 	token, err := c.getToken()
 	if err != nil {
@@ -197,19 +205,28 @@ func (c *Client) Get(path string, dst interface{}) error {
 	return nil
 }
 
+// SetAuth updates the client's authentication credentials.
+// This will invalidate any cached tokens and require re-authentication on the next API call.
 func (c *Client) SetAuth(username, password string) {
 	c.username = username
 	c.password = password
 }
 
+// SetBaseURL updates the base URL for API requests.
+// This is primarily useful for testing or if KSEI changes their API endpoint.
 func (c *Client) SetBaseURL(baseURL string) {
 	c.baseURL = baseURL
 }
 
+// SetPlainPassword configures whether the password should be automatically hashed.
+// When true, the client will hash plain text passwords using KSEI's hashing service.
+// When false, the password is expected to be pre-hashed.
 func (c *Client) SetPlainPassword(plainPassword bool) {
 	c.plainPassword = plainPassword
 }
 
+// GetPortfolioSummary retrieves a summary of all portfolio holdings including
+// total values and breakdown by asset type (equity, mutual funds, bonds, etc.).
 func (c *Client) GetPortfolioSummary() (*PortfolioSummaryResponse, error) {
 	var response PortfolioSummaryResponse
 
@@ -220,6 +237,8 @@ func (c *Client) GetPortfolioSummary() (*PortfolioSummaryResponse, error) {
 	return &response, nil
 }
 
+// GetCashBalances retrieves detailed cash balance information across all accounts,
+// including different currencies and custodian banks.
 func (c *Client) GetCashBalances() (*CashBalanceResponse, error) {
 	var response CashBalanceResponse
 
@@ -230,6 +249,9 @@ func (c *Client) GetCashBalances() (*CashBalanceResponse, error) {
 	return &response, nil
 }
 
+// GetShareBalances retrieves detailed share/security holdings for the specified portfolio type.
+// Valid portfolio types are EquityType, MutualFundType, BondType, and OtherType.
+// Use GetCashBalances() for cash holdings instead.
 func (c *Client) GetShareBalances(portfolioType PortfolioType) (*ShareBalanceResponse, error) {
 	if portfolioType == CashType {
 		return nil, fmt.Errorf("GetShareBalances does not accept cash type")
@@ -246,6 +268,8 @@ func (c *Client) GetShareBalances(portfolioType PortfolioType) (*ShareBalanceRes
 	return &response, nil
 }
 
+// GetGlobalIdentity retrieves detailed account and identity information
+// including investor ID, tax numbers, and other personal details.
 func (c *Client) GetGlobalIdentity() (*GlobalIdentityResponse, error) {
 	var identity GlobalIdentityResponse
 
