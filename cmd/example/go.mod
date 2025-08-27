@@ -22,4 +22,3 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 )
 
-replace github.com/chickenzord/goksei => ./../..
