@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/corpix/uarand"
+	"golang.org/x/sync/singleflight"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 // Client provides access to the KSEI (Indonesian Central Securities Depository) API.
 // It handles authentication, token management, and provides methods to retrieve
 // portfolio information including cash balances, share holdings, and account details.
+// It uses singleflight to prevent duplicate concurrent requests to the same endpoint.
 type Client struct {
 	baseURL string
 	timeout time.Duration
@@ -31,11 +33,14 @@ type Client struct {
 	username      string
 	password      string
 	plainPassword bool
+
+	// singleflight group to prevent duplicate concurrent requests
+	sfGroup singleflight.Group
 }
 
 // ClientOpts contains configuration options for creating a new Client.
 type ClientOpts struct {
-	AuthStore     AuthStore     // directory path to store cached authentication data
+	AuthStore     AuthStore // directory path to store cached authentication data
 	Username      string
 	Password      string
 	PlainPassword bool
@@ -83,6 +88,7 @@ func (c *Client) hashPassword() (string, error) {
 	req.Header.Set("User-Agent", uarand.GetRandom())
 
 	client := &http.Client{Timeout: c.timeout}
+
 	res, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error getting hashed password: %w", err)
@@ -137,6 +143,7 @@ func (c *Client) login() (string, error) {
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: c.timeout}
+
 	res, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -187,17 +194,21 @@ func (c *Client) getToken() (string, error) {
 	return token, nil
 }
 
-// Get performs an authenticated GET request to the specified API path and decodes
-// the JSON response into dst. It automatically handles authentication and token refresh.
-func (c *Client) Get(path string, dst interface{}) error {
+// singleflightKey generates a unique key for singleflight based on username and path
+func (c *Client) singleflightKey(path string) string {
+	return c.username + ":" + path
+}
+
+// doGet performs the actual HTTP GET request - used internally by singleflight
+func (c *Client) doGet(path string) ([]byte, error) {
 	token, err := c.getToken()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, c.baseURL+path, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Set("Referer", "https://akses.ksei.co.id")
@@ -205,12 +216,39 @@ func (c *Client) Get(path string, dst interface{}) error {
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	client := &http.Client{Timeout: c.timeout}
+
 	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	// Read the response body
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(res.Body); err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+// Get performs an authenticated GET request to the specified API path and decodes
+// the JSON response into dst. It automatically handles authentication and token refresh.
+// Uses singleflight to prevent duplicate concurrent requests to the same endpoint.
+func (c *Client) Get(path string, dst any) error {
+	// Use singleflight to prevent duplicate concurrent requests
+	key := c.singleflightKey(path)
+	result, err, _ := c.sfGroup.Do(key, func() (any, error) {
+		return c.doGet(path)
+	})
+
 	if err != nil {
 		return err
 	}
 
-	if err := json.NewDecoder(res.Body).Decode(dst); err != nil {
+	// Decode the response body into dst
+	responseBody := result.([]byte)
+	if err := json.Unmarshal(responseBody, dst); err != nil {
 		return fmt.Errorf("error decoding body: %w", err)
 	}
 
