@@ -1,8 +1,6 @@
 module github.com/chickenzord/goksei
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.0
 
 require (
 	github.com/corpix/uarand v0.2.0
@@ -10,7 +8,7 @@ require (
 	github.com/philippgille/gokv v0.7.0
 	github.com/philippgille/gokv/encoding v0.7.0
 	github.com/philippgille/gokv/file v0.7.0
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.20.0
 )
 
 require (
